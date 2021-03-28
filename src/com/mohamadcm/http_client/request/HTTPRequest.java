@@ -24,14 +24,13 @@ public class HTTPRequest {
     }
 
     public Object sendRequest() throws IOException, InterruptedException {
-        String xx = "{\"_username\":\"09390703846\",\"_password\":\"12345678\"}";
         HttpClient client = HttpClient.newHttpClient();
         String queryAppendedURL = URL + queryString;
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(queryAppendedURL))
                 .timeout(Duration.ofMinutes(1))
                 .header("Content-Type", applicationType);
-        requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(xx));
+        requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(payload));
         headers.forEach(requestBuilder::header);
         HttpRequest request = requestBuilder.build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

@@ -5,41 +5,67 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashMap;
 
 public class HTTPRequest {
     private String method;
     private String URL;
+    private String applicationType;
     private HashMap<String, String> headers;
     private String queryString;
-    public HTTPRequest(String method, String url){
+    private String payload;
+
+    public HTTPRequest(String method, String url, ApplicationType applicationType) {
         this.method = method != null ? method : "GET"; //TODO: VALIDATE METHOD
         URL = url; //TODO: build url queries, VALIDATE URL
+        this.applicationType = "application/" + (applicationType == ApplicationType.JSON ? "JSON" : "x-www-form-urlencoded");
+        headers = new HashMap<>();
     }
+
     public Object sendRequest() throws IOException, InterruptedException {
         String xx = "{\"_username\":\"09390703846\",\"_password\":\"12345678\"}";
         HttpClient client = HttpClient.newHttpClient();
         String queryAppendedURL = URL + queryString;
-        HttpRequest request = HttpRequest.newBuilder()
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(queryAppendedURL))
                 .timeout(Duration.ofMinutes(1))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(xx))
-                .build(); //TODO: remove build so you can add multiple headers
-        HttpResponse<String> response =
-                client.send(request, HttpResponse.BodyHandlers.ofString());
+                .header("Content-Type", applicationType);
+        requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(xx));
+        headers.forEach(requestBuilder::header);
+        HttpRequest request = requestBuilder.build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         System.out.println(response.statusCode());
         System.out.println(response.body());
-        return "";
+        return response;
+    }
+
+    // Getters and setters
+    public HTTPRequest setHeaders(HashMap<String, String> headers) {
+        this.headers = headers;
+        return this;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public HTTPRequest setPayload(String payload) {
+        this.payload = payload;
+        return this;
     }
 
     public String getQueryString() {
         return queryString;
     }
 
-    public void setQueryString(String queryString) {
+    public HTTPRequest setQueryString(String queryString) {
         this.queryString = queryString;
+        return this;
+    }
+
+    //Application Type enum
+    public enum ApplicationType {
+        JSON, URLENCODED
     }
 }

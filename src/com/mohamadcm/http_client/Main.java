@@ -13,8 +13,9 @@ public class Main {
     public static void main(String[] args) {
         HeaderParser hp = new HeaderParser();
         try {
-            PayloadParser payloadParser = new PayloadParser(null);
-            payloadParser.parse("_name=Mohamad+CM&Age=23");
+            PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.JSON);
+            payloadParser.parse("{\"_name\":\"1234\",\"_fName\":\"789\"}");
+            System.out.println(payloadParser.toString());
 
 
             HeaderParser headerParser = new HeaderParser();

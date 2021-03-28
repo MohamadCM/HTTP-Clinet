@@ -1,10 +1,14 @@
 package com.mohamadcm.http_client.parser;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mohamadcm.http_client.request.HTTPRequest;
 
+import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 public class PayloadParser implements Parser<Object> {
     private final HashMap<String, Object> parsedValue;
@@ -27,12 +31,10 @@ public class PayloadParser implements Parser<Object> {
                 String value = URLDecoder.decode(fields[1], StandardCharsets.UTF_8);
                 parsedValue.put(name, value);
             }
-            return this;
-        }
-        String[] split = input.split("&");
-        for (String keyValueString : split) {
-            String[] keyValuePair = keyValueString.split("=");
-            parsedValue.put(keyValuePair[0], keyValuePair[1]);
+        }else {
+            Gson gson = new Gson();
+            HashMap<String, Object> map = gson.fromJson(input, HashMap.class);
+            map.forEach(parsedValue::put);
         }
         return this;
     }
@@ -44,16 +46,18 @@ public class PayloadParser implements Parser<Object> {
 
     @Override
     public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
         if(applicationType.equals(HTTPRequest.ApplicationType.URLENCODED)) {
-            StringBuilder stringBuilder = new StringBuilder();
             parsedValue.forEach((key, value) -> {
                 Object newVal = value;
                 if (value instanceof String) newVal = ((String) value).replaceAll(" ", "+");
                 stringBuilder.append(key).append("=").append(newVal).append("&");
             });
-            return stringBuilder.toString();
+        } else {
+            Gson gson = new Gson();
+            stringBuilder.append(gson.toJson(parsedValue, HashMap.class));
         }
-        return "";
+        return stringBuilder.toString();
     }
 
     public HTTPRequest.ApplicationType getApplicationType() {

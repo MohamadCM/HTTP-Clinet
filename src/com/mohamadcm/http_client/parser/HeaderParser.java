@@ -10,9 +10,9 @@ public class HeaderParser implements Parser<String> {
     }
 
     @Override
-    public Parser<String> parse(String input) throws Exception {
+    public Parser<String> parse(String input) {
         if (input == null || input.equals(""))
-            throw new Exception("No input provided as a header!");
+            return this;
         String[] split = input.split(",");
         for (String keyValueString : split) {
             String[] keyValuePair = keyValueString.split(":");

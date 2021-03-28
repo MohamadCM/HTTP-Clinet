@@ -1,14 +1,11 @@
 package com.mohamadcm.http_client.parser;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.mohamadcm.http_client.request.HTTPRequest;
 
-import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.Map;
 
 public class PayloadParser implements Parser<Object> {
     private final HashMap<String, Object> parsedValue;
@@ -17,14 +14,14 @@ public class PayloadParser implements Parser<Object> {
 
     public PayloadParser(HTTPRequest.ApplicationType applicationType) {
         this.parsedValue = new HashMap<>();
-        this.applicationType = applicationType == null ? HTTPRequest.ApplicationType.URLENCODED : HTTPRequest.ApplicationType.JSON;
+        this.applicationType = applicationType == null ? HTTPRequest.ApplicationType.URL_ENCODED : HTTPRequest.ApplicationType.JSON;
     }
 
     @Override
-    public Parser<Object> parse(String input) throws Exception {
+    public Parser<Object> parse(String input) {
         if (input == null || input.equals(""))
-            throw new Exception("No input provided as a header!");
-        if(applicationType.equals(HTTPRequest.ApplicationType.URLENCODED)){
+            return this;
+        if(applicationType.equals(HTTPRequest.ApplicationType.URL_ENCODED)){
             String[] pairs = input.split("&");
             for (String pair : pairs) {
                 String[] fields = pair.split("=");
@@ -53,7 +50,7 @@ public class PayloadParser implements Parser<Object> {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        if(applicationType.equals(HTTPRequest.ApplicationType.URLENCODED)) {
+        if(applicationType.equals(HTTPRequest.ApplicationType.URL_ENCODED)) {
             parsedValue.forEach((key, value) -> {
                 Object newVal = value;
                 if (value instanceof String) newVal = ((String) value).replaceAll(" ", "+");

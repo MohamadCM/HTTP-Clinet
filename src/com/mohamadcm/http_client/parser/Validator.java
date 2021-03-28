@@ -1,10 +1,8 @@
 package com.mohamadcm.http_client.parser;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.mohamadcm.http_client.request.HTTPRequest;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -22,7 +20,12 @@ public class Validator {
         }
         return res;
     }
-
+    public static boolean isValidMethod(String method){
+        boolean res = false;
+        if(method.equals("GET") || method.equals("POST") || method.equals("PATCH") || method.equals("DELETE") || method.equals("PUT"))
+            res = true;
+        return res;
+    }
     public static boolean isJsonValid(String input) {
         boolean res;
         if (input == null || input.equals(""))
@@ -45,11 +48,10 @@ public class Validator {
             res = false;
         else {
             try {
-                PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.URLENCODED);
+                PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.URL_ENCODED);
                 String url = URLDecoder.decode(input, StandardCharsets.UTF_8);
                 String encodeStr = URLEncoder.encode(url, StandardCharsets.UTF_8);
-                System.out.println(encodeStr);
-                res = input.equals(encodeStr.replaceAll("%3D", "=").replaceAll("%26", "&"));
+                res = input.equals(encodeStr.replaceAll("%3D", "=").replaceAll("%26", "&")) && input.contains("=");
             } catch (Exception e) {
                 res = false;
             }

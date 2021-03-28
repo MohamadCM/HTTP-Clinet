@@ -5,6 +5,7 @@ import com.mohamadcm.http_client.parser.PayloadParser;
 import com.mohamadcm.http_client.parser.QueryParser;
 import com.mohamadcm.http_client.parser.Validator;
 import com.mohamadcm.http_client.request.HTTPRequest;
+import com.mohamadcm.http_client.user_interface.CLI;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +14,8 @@ public class Main {
 
     public static void main(String[] args) {
         HeaderParser hp = new HeaderParser();
-        try {
-            PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.URLENCODED);
+            CLI cli = new CLI(args);
+            /*PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.URLENCODED);
             String tmp = "_name=John&Age=23";
             payloadParser.parse(tmp);
             System.out.println(Validator.isUrlencodedValid(tmp));
@@ -28,9 +29,6 @@ public class Main {
             httpRequest.setQueryString(queryParser.toString());
             httpRequest.setPayload(payloadParser.toString());
             httpRequest.setHeaders(headerParser.getParsedValue());
-            httpRequest.sendRequest();
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
+            httpRequest.sendRequest();*/
     }
 }

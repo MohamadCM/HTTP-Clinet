@@ -10,9 +10,9 @@ public class QueryParser implements Parser<Object> {
     }
 
     @Override
-    public Parser<Object> parse(String input) throws Exception {
+    public Parser<Object> parse(String input) {
         if (input == null || input.equals(""))
-            throw new Exception("No input provided as a header!");
+            return this;
         String[] split = input.split("&");
         for (String keyValueString : split) {
             String[] keyValuePair = keyValueString.split("=");

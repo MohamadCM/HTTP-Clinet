@@ -15,28 +15,27 @@ public class HTTPRequest {
     private HashMap<String, String> headers;
     private String queryString;
     private String payload;
+    private int timeout;
 
-    public HTTPRequest(String method, String url, ApplicationType applicationType) {
+    public HTTPRequest(String method, String url, ApplicationType applicationType, int timeout) {
         this.method = method != null ? method : "GET"; //TODO: VALIDATE METHOD
         URL = url; //TODO: build url queries, VALIDATE URL
         this.applicationType = "application/" + (applicationType == ApplicationType.JSON ? "JSON" : "x-www-form-urlencoded");
+        this.timeout = timeout;
         headers = new HashMap<>();
     }
 
-    public Object sendRequest() throws IOException, InterruptedException {
+    public HttpResponse sendRequest() throws IOException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
         String queryAppendedURL = URL + queryString;
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(queryAppendedURL))
-                .timeout(Duration.ofMinutes(1))
+                .timeout(Duration.ofSeconds(timeout))
                 .header("Content-Type", applicationType);
         requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(payload));
         headers.forEach(requestBuilder::header);
         HttpRequest request = requestBuilder.build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        System.out.println(response.statusCode());
-        System.out.println(response.body());
-        return response;
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     // Getters and setters
@@ -65,6 +64,6 @@ public class HTTPRequest {
 
     //Application Type enum
     public enum ApplicationType {
-        JSON, URLENCODED
+        JSON, URL_ENCODED
     }
 }

@@ -3,6 +3,7 @@ package com.mohamadcm.http_client;
 import com.mohamadcm.http_client.parser.HeaderParser;
 import com.mohamadcm.http_client.parser.PayloadParser;
 import com.mohamadcm.http_client.parser.QueryParser;
+import com.mohamadcm.http_client.parser.Validator;
 import com.mohamadcm.http_client.request.HTTPRequest;
 
 import java.util.HashMap;
@@ -13,9 +14,10 @@ public class Main {
     public static void main(String[] args) {
         HeaderParser hp = new HeaderParser();
         try {
-            PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.JSON);
-            payloadParser.parse("{\"_name\":\"1234\",\"_fName\":\"789\"}");
-            System.out.println(payloadParser.toString());
+            PayloadParser payloadParser = new PayloadParser(HTTPRequest.ApplicationType.URLENCODED);
+            String tmp = "_name=John&Age=23";
+            payloadParser.parse(tmp);
+            System.out.println(Validator.isUrlencodedValid(tmp));
 
 
             HeaderParser headerParser = new HeaderParser();

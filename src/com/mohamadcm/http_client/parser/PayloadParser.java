@@ -13,6 +13,7 @@ import java.util.Map;
 public class PayloadParser implements Parser<Object> {
     private final HashMap<String, Object> parsedValue;
     private HTTPRequest.ApplicationType applicationType;
+    private String wrongJson = null;
 
     public PayloadParser(HTTPRequest.ApplicationType applicationType) {
         this.parsedValue = new HashMap<>();
@@ -32,9 +33,14 @@ public class PayloadParser implements Parser<Object> {
                 parsedValue.put(name, value);
             }
         }else {
-            Gson gson = new Gson();
-            HashMap<String, Object> map = gson.fromJson(input, HashMap.class);
-            map.forEach(parsedValue::put);
+            try {
+                Gson gson = new Gson();
+                HashMap<String, Object> map = gson.fromJson(input, HashMap.class);
+                map.forEach(parsedValue::put);
+            } catch (Exception e){
+                wrongJson = input;
+            }
+
         }
         return this;
     }
@@ -54,8 +60,11 @@ public class PayloadParser implements Parser<Object> {
                 stringBuilder.append(key).append("=").append(newVal).append("&");
             });
         } else {
-            Gson gson = new Gson();
-            stringBuilder.append(gson.toJson(parsedValue, HashMap.class));
+            if(wrongJson == null) {
+                Gson gson = new Gson();
+                stringBuilder.append(gson.toJson(parsedValue, HashMap.class));
+            } else
+                stringBuilder.append(wrongJson);
         }
         return stringBuilder.toString();
     }

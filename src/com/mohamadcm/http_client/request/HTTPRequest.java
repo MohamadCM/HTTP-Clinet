@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mohamadcm.http_client.user_interface.ProgressBar;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -62,7 +63,11 @@ public class HTTPRequest {
         String contentType = connection.getHeaderField("Content-Type").split("/")[1];
         int contentLength = connection.getContentLength();
 
-        if (contentType.equalsIgnoreCase("PDF") || contentType.equalsIgnoreCase("JPG") ||
+        ProgressBar progressBar = new ProgressBar(); //Initalizing progress bar
+        progressBar.update(0, contentLength);
+
+        if(contentLength == -1) contentLength = Integer.MAX_VALUE;
+        if (contentType.equalsIgnoreCase("PDF") || contentType.equalsIgnoreCase("JPEG") ||
                 contentType.equalsIgnoreCase("PNG") || contentType.equalsIgnoreCase("MP4")) {
             if (status >= 200 && status < 300) {
                 String fileName = "";
@@ -85,9 +90,13 @@ public class HTTPRequest {
 
                 int bytesRead;
                 byte[] buffer = new byte[4_000];
+                int overallBytesRead = 0;
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    overallBytesRead += bytesRead;
+                    progressBar.update(overallBytesRead, contentLength); // Update progress bar
                     outputStream.write(buffer, 0, bytesRead);
                 }
+                System.out.println(); // Print an empty line after progress bar
 
                 outputStream.close();
                 inputStream.close();
@@ -104,9 +113,13 @@ public class HTTPRequest {
             BufferedReader in = new BufferedReader(streamReader);
             String inputLine;
             StringBuilder content = new StringBuilder();
+            long overallBytesRead = 0;
             while ((inputLine = in.readLine()) != null) {
+                overallBytesRead += inputLine.getBytes().length;
+                progressBar.update(overallBytesRead, contentLength); // Update progress bar
                 content.append(inputLine);
             }
+            System.out.println(); // Print an empty line after progress bar
             result = content.toString();
             in.close();
         }

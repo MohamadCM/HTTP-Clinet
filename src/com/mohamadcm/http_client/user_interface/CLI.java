@@ -26,8 +26,8 @@ public class CLI implements Runnable {
             System.out.println("\u001B[31m" + "Error: Wrong URL Provided!!" + "\u001B[0m");
             return;
         }
-        StringBuilder headerStringBuiler = new StringBuilder("");
-        StringBuilder queryStringBuiler = new StringBuilder("");
+        StringBuilder headerStringBuilder = new StringBuilder("");
+        StringBuilder queryStringBuilder = new StringBuilder("");
         String data = "";
         HTTPRequest.ApplicationType applicationType = HTTPRequest.ApplicationType.URL_ENCODED;
         String method = "GET";
@@ -36,15 +36,15 @@ public class CLI implements Runnable {
             switch (args[i]) {
                 case "-H":
                 case "--headers":
-                    if (!headerStringBuiler.toString().equals(""))
-                        headerStringBuiler.append(",");
-                    headerStringBuiler.append(args[i + 1]);
+                    if (!headerStringBuilder.toString().equals(""))
+                        headerStringBuilder.append(",");
+                    headerStringBuilder.append(args[i + 1]);
                     break;
                 case "-Q":
                 case "--queries":
-                    if (!queryStringBuiler.toString().equals(""))
-                        queryStringBuiler.append("&");
-                    queryStringBuiler.append(args[i + 1]);
+                    if (!queryStringBuilder.toString().equals(""))
+                        queryStringBuilder.append("&");
+                    queryStringBuilder.append(args[i + 1]);
                     break;
                 case "-D":
                 case "--data":
@@ -68,6 +68,7 @@ public class CLI implements Runnable {
                 case "--file":
                     applicationType = HTTPRequest.ApplicationType.FILE;
                     data = args[i + 1];
+                    method = "POST";
                     break;
             }
         }
@@ -79,7 +80,7 @@ public class CLI implements Runnable {
             System.out.println("\u001B[31m" + "Error: Wrong timeout time!!" + "\u001B[0m");
             return;
         }
-        initRequest(url, method, headerStringBuiler.toString(), queryStringBuiler.toString(), data, applicationType, timeout);
+        initRequest(url, method, headerStringBuilder.toString(), queryStringBuilder.toString(), data, applicationType, timeout);
     }
 
     private void initRequest(String url, String method, String header, String query, String data, HTTPRequest.ApplicationType applicationType, int timeout) {
@@ -107,10 +108,8 @@ public class CLI implements Runnable {
             httpRequest.sendRequest();
         } catch (SocketTimeoutException te) {
             System.out.println("\u001B[31m" + "Error: Timeout time exceeded!" + "\u001B[0m");
-            return;
         } catch (Exception e) {
             e.printStackTrace();
-            return;
         }
     }
 }

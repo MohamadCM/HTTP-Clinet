@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mohamadcm.http_client.parser.PayloadParser;
 import com.mohamadcm.http_client.user_interface.ProgressBar;
 
 import java.io.*;
@@ -29,7 +30,7 @@ public class HTTPRequest {
         URL = url; //TODO: build url queries, VALIDATE URL
         switch (applicationType) {
             case FILE:
-                this.applicationType = "binary/octet-stream";
+                this.applicationType = "application/octet-stream";
                 break;
             case JSON:
                 this.applicationType = "application/JSON";
@@ -43,20 +44,27 @@ public class HTTPRequest {
         this.payload = null;
     }
 
-    public void sendRequest() throws IOException, SocketException {
+    public void sendRequest() throws IOException {
         String queryAppendedURL = URL + queryString;
         HttpURLConnection connection = (HttpURLConnection) new URL(queryAppendedURL).openConnection();
         connection.setRequestMethod(method);
         connection.setConnectTimeout(timeout * 1000);
         connection.setRequestProperty("Content-Type", applicationType);
-        headers.forEach(connection::setRequestProperty);
+        if (applicationType.contains("stream"))
+            connection.setRequestProperty("Content-Disposition", "attachment; filename=" + new File(payload).getName()); //Setting filename header
+        headers.forEach(connection::setRequestProperty); // Setting user set headers
         if (payload != null &&
                 (method.equalsIgnoreCase("POST") || method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("PATCH"))) {
             connection.setDoOutput(true);
             try (OutputStream os = connection.getOutputStream()) { // Writing Data
                 byte[] input = payload.getBytes(StandardCharsets.UTF_8);
+                if (applicationType.contains("stream")) input = PayloadParser.convertFileToString(payload);
                 os.write(input, 0, input.length);
+            } catch (Exception e) {
+                System.out.println("\u001B[31m" + "Error in sending data!" + "\u001B[0m");
+                e.printStackTrace();
             }
+
         }
         int status = connection.getResponseCode();
         String result = "";
@@ -66,7 +74,8 @@ public class HTTPRequest {
         ProgressBar progressBar = new ProgressBar(); //Initalizing progress bar
         progressBar.update(0, contentLength);
 
-        if(contentLength == -1) contentLength = Integer.MAX_VALUE;
+        //Get file or text response
+        if (contentLength == -1) contentLength = Integer.MAX_VALUE;
         if (contentType.equalsIgnoreCase("PDF") || contentType.equalsIgnoreCase("JPEG") ||
                 contentType.equalsIgnoreCase("PNG") || contentType.equalsIgnoreCase("MP4")) {
             if (status >= 200 && status < 300) {
@@ -123,7 +132,8 @@ public class HTTPRequest {
             result = content.toString();
             in.close();
         }
-        // Showing
+
+        // Showing result
         showResult(connection, result, contentType);
         connection.disconnect();
     }

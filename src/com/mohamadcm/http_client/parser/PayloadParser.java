@@ -3,6 +3,9 @@ package com.mohamadcm.http_client.parser;
 import com.google.gson.Gson;
 import com.mohamadcm.http_client.request.HTTPRequest;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -21,7 +24,7 @@ public class PayloadParser implements Parser<Object> {
     public Parser<Object> parse(String input) {
         if (input == null || input.equals(""))
             return this;
-        if(applicationType.equals(HTTPRequest.ApplicationType.URL_ENCODED)){
+        if (applicationType.equals(HTTPRequest.ApplicationType.URL_ENCODED)) {
             String[] pairs = input.split("&");
             for (String pair : pairs) {
                 String[] fields = pair.split("=");
@@ -29,12 +32,12 @@ public class PayloadParser implements Parser<Object> {
                 String value = URLDecoder.decode(fields[1], StandardCharsets.UTF_8);
                 parsedValue.put(name, value);
             }
-        }else {
+        } else {
             try {
                 Gson gson = new Gson();
                 HashMap<String, Object> map = gson.fromJson(input, HashMap.class);
                 map.forEach(parsedValue::put);
-            } catch (Exception e){
+            } catch (Exception e) {
                 wrongJson = input;
             }
 
@@ -50,14 +53,14 @@ public class PayloadParser implements Parser<Object> {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        if(applicationType.equals(HTTPRequest.ApplicationType.URL_ENCODED)) {
+        if (applicationType.equals(HTTPRequest.ApplicationType.URL_ENCODED)) {
             parsedValue.forEach((key, value) -> {
                 Object newVal = value;
                 if (value instanceof String) newVal = ((String) value).replaceAll(" ", "+");
                 stringBuilder.append(key).append("=").append(newVal).append("&");
             });
         } else {
-            if(wrongJson == null) {
+            if (wrongJson == null) {
                 Gson gson = new Gson();
                 stringBuilder.append(gson.toJson(parsedValue, HashMap.class));
             } else
@@ -72,5 +75,24 @@ public class PayloadParser implements Parser<Object> {
 
     public void setApplicationType(HTTPRequest.ApplicationType applicationType) {
         this.applicationType = applicationType;
+    }
+
+    public static byte[] convertFileToString(String path) {
+        try {
+            File file = new File(path);
+
+            InputStream insputStream = new FileInputStream(file);
+            long length = file.length();
+            byte[] bytes = new byte[(int) length];
+
+            insputStream.read(bytes);
+            insputStream.close();
+
+            return bytes;
+        } catch (Exception e) {
+            System.out.println("\u001B[31m" + "Error in reading file!" + "\u001B[0m");
+            e.printStackTrace();
+            return new byte[0];
+        }
     }
 }

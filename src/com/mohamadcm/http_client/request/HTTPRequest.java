@@ -8,14 +8,8 @@ import com.google.gson.JsonParser;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,7 +42,7 @@ public class HTTPRequest {
         this.payload = null;
     }
 
-    public void sendRequest() throws IOException, InterruptedException, SocketException {
+    public void sendRequest() throws IOException, SocketException {
         String queryAppendedURL = URL + queryString;
         HttpURLConnection connection = (HttpURLConnection) new URL(queryAppendedURL).openConnection();
         connection.setRequestMethod(method);
@@ -64,39 +58,65 @@ public class HTTPRequest {
             }
         }
         int status = connection.getResponseCode();
-        Reader streamReader = null;
-        if (status > 299) { // Choosing the right stream reader
-            streamReader = new InputStreamReader(connection.getErrorStream());
+        String result = "";
+        String contentType = connection.getHeaderField("Content-Type").split("/")[1];
+        int contentLength = connection.getContentLength();
+
+        if (contentType.equalsIgnoreCase("PDF") || contentType.equalsIgnoreCase("JPG") ||
+                contentType.equalsIgnoreCase("PNG") || contentType.equalsIgnoreCase("MP4")) {
+            if (status >= 200 && status < 300) {
+                String fileName = "";
+                String disposition = connection.getHeaderField("Content-Disposition");
+
+                if (disposition != null) {
+                    // extracts file name from header field
+                    int index = disposition.indexOf("filename=");
+                    if (index > 0) {
+                        fileName = disposition.substring(index + 10,
+                                disposition.length() - 1);
+                    }
+                } else
+                    fileName = (long) Math.ceil(Math.random() * 100_000) + "." + contentType; // giving a random name
+
+                InputStream inputStream = connection.getInputStream(); // open input stream from the HTTP connection
+                String saveFilePath = "files" + File.separator + fileName;
+
+                FileOutputStream outputStream = new FileOutputStream(saveFilePath); // open an output stream to save into file
+
+                int bytesRead;
+                byte[] buffer = new byte[4_000];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                outputStream.close();
+                inputStream.close();
+
+                result = "File successfully downloaded to files/";
+            }
         } else {
-            streamReader = new InputStreamReader(connection.getInputStream());
+            Reader streamReader;
+            if (status > 299) { // Choosing the right stream reader
+                streamReader = new InputStreamReader(connection.getErrorStream());
+            } else {
+                streamReader = new InputStreamReader(connection.getInputStream());
+            }
+            BufferedReader in = new BufferedReader(streamReader);
+            String inputLine;
+            StringBuilder content = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+            result = content.toString();
+            in.close();
         }
-        BufferedReader in = new BufferedReader(streamReader);
-        String inputLine;
-        StringBuffer content = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-        }
-        in.close();
-
         // Showing
-        showResult(connection, content.toString());
+        showResult(connection, result, contentType);
         connection.disconnect();
-
-        /*HttpClient client = HttpClient.newHttpClient();
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(queryAppendedURL))
-                .timeout(Duration.ofSeconds(timeout))
-                .header("Content-Type", applicationType);
-        if (this.applicationType.contains("stream")) requestBuilder.method(method, HttpRequest.BodyPublishers.ofFile(Path.of(payload)));
-        else requestBuilder.method(method, HttpRequest.BodyPublishers.ofString(payload));
-        headers.forEach(requestBuilder::header);
-        HttpRequest request = requestBuilder.build();
-        return client.send(request, HttpResponse.BodyHandlers.ofString());*/
     }
 
-    private static void showResult(HttpURLConnection connection, String content) {
+    private static void showResult(HttpURLConnection connection, String content, String contentType) {
         try {
-            String contentType = connection.getHeaderField("Content-Type").split("/")[1];
             StringBuilder fullResponseBuilder = new StringBuilder();
             fullResponseBuilder.append(connection.getResponseCode())
                     .append(" ")
@@ -116,7 +136,8 @@ public class HTTPRequest {
                         }
                         fullResponseBuilder.append("\n");
                     });
-            if (contentType.equalsIgnoreCase("json")) {
+
+            if (contentType.contains("json")) {
                 JsonParser parser = new JsonParser();
                 JsonObject json = parser.parse(content).getAsJsonObject();
 

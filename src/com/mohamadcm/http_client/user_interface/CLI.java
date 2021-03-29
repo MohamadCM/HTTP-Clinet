@@ -6,6 +6,7 @@ import com.mohamadcm.http_client.parser.QueryParser;
 import com.mohamadcm.http_client.parser.Validator;
 import com.mohamadcm.http_client.request.HTTPRequest;
 
+import java.net.SocketTimeoutException;
 import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpResponse;
 import java.util.concurrent.TimeoutException;
@@ -64,6 +65,10 @@ public class CLI implements Runnable {
                         return;
                     }
                     break;
+                case "--file":
+                    applicationType = HTTPRequest.ApplicationType.FILE;
+                    data = args[i + 1];
+                    break;
             }
         }
         if (!Validator.isValidMethod(method)) {
@@ -99,12 +104,9 @@ public class CLI implements Runnable {
             httpRequest.setPayload(payloadParser.toString());
             httpRequest.setHeaders(headerParser.getParsedValue());
 
-            HttpResponse result = httpRequest.sendRequest();
-            System.out.println(result.version().toString().replaceFirst("_", "/").replaceAll("_", ".") + " " + result.statusCode());
-            System.out.println(result.headers().map());
-            System.out.println(result.body());
-        } catch (HttpConnectTimeoutException te) {
-            System.out.println("Error: Timeout time exceeded!");
+            httpRequest.sendRequest();
+        } catch (SocketTimeoutException te) {
+            System.out.println("\u001B[31m" + "Error: Timeout time exceeded!" + "\u001B[0m");
             return;
         } catch (Exception e) {
             e.printStackTrace();
